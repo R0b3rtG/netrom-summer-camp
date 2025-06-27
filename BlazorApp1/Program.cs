@@ -1,8 +1,12 @@
 using BlazorApp1.Components;
-
+using BlazorApp1.Context;
+using BlazorApp1.Repositories.Interfaces;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using BlazorApp1.Repositories.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +21,11 @@ builder.Services
     })
     .AddBootstrap5Providers()
     .AddFontAwesomeIcons();
+
+builder.Services.AddDbContext<ShowTimeContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnectionString")));
+
+builder.Services.AddScoped<IRepositoryBand, RepositoryBand>();
 
 var app = builder.Build();
 
@@ -36,4 +45,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.UseStaticFiles();
+
 app.Run();
+
