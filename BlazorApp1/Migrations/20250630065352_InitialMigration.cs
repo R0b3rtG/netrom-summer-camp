@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BlazorApp1.Migrations
 {
     /// <inheritdoc />
-    public partial class InitalMigration : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,8 +15,7 @@ namespace BlazorApp1.Migrations
                 name: "Bands",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Genre = table.Column<int>(type: "int", nullable: false)
                 },
@@ -29,8 +28,7 @@ namespace BlazorApp1.Migrations
                 name: "Festivals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -45,8 +43,8 @@ namespace BlazorApp1.Migrations
                 name: "BandFestival",
                 columns: table => new
                 {
-                    BandsId = table.Column<int>(type: "int", nullable: false),
-                    FestivalsId = table.Column<int>(type: "int", nullable: false)
+                    BandsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FestivalsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -69,10 +67,9 @@ namespace BlazorApp1.Migrations
                 name: "Bookings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FestivalId = table.Column<int>(type: "int", nullable: false),
+                    FestivalId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

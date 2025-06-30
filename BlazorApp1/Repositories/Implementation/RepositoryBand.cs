@@ -9,3 +9,4 @@ namespace BlazorApp1.Repositories.Implementation
         public RepositoryBand(ShowTimeContext context) : base(context) { }
     }
 }
+  

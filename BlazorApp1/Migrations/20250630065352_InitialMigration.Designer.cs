@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorApp1.Migrations
 {
     [DbContext(typeof(ShowTimeContext))]
-    [Migration("20250627081557_InitalMigration")]
-    partial class InitalMigration
+    [Migration("20250630065352_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,11 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("BandFestival", b =>
                 {
-                    b.Property<int>("BandsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("BandsId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("FestivalsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FestivalsId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("BandsId", "FestivalsId");
 
@@ -42,11 +42,9 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("BlazorApp1.Entities.Band", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Genre")
                         .HasColumnType("int");
@@ -62,11 +60,9 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("BlazorApp1.Entities.Booking", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -75,8 +71,8 @@ namespace BlazorApp1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FestivalId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FestivalId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -87,11 +83,9 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("BlazorApp1.Entities.Festival", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
