@@ -20,7 +20,8 @@ namespace BlazorApp1.Repositories.Implementation
             await _dbSet.AddAsync(entity);
         }
 
-        public void Delete(T entity) {
+        public void Delete(T entity)
+        {
             _dbSet.Remove(entity);
         }
 
@@ -44,3 +45,4 @@ namespace BlazorApp1.Repositories.Implementation
             _dbSet.Update(entity);
         }
     }
+}
