@@ -1,0 +1,32 @@
+﻿@page "/list-bands"
+
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+@inject IRepositoryBand RepositoryBand
+@using Blazorise.DataGrid
+@using BlazorApp1.Enums
+
+<DataGrid 
+	TItem="Band"
+	Data="@_bands"
+	ShowPager="true"
+	PageSize="10"
+	Responsive="true"
+	Striped="true"
+	Bordered="true"
+	Hoverable="true"
+>
+	<DataGridColumns>
+		<DataGridColumn Caption="Name" TItem="Band" Field="@nameof(Band.Name)"></DataGridColumn>
+		<DataGridColumn Caption="Genre" TItem="Band" Field="@nameof(Band.Genre)"></DataGridColumn>
+	</DataGridColumns>
+</DataGrid>
+
+@code {
+	private List<Band>? _bands;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_bands = (await RepositoryBand.GetAllAsync()).ToList();
+	}
+}

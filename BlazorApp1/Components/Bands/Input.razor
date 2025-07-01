@@ -1,0 +1,37 @@
+﻿@rendermode InteractiveServer
+@page "/create-band"
+@using BlazorApp1.Repositories.Interfaces
+@using BlazorApp1.Entities
+@using BlazorApp1.Enums
+@inject IRepositoryBand RepositoryBand
+@inject NavigationManager NavManager
+
+<Form>
+	<Field>
+		<FieldLabel>Name</FieldLabel>
+		<TextEdit @bind-text="Band.Name"></TextEdit>
+	</Field>
+	<Field>
+		<Select TValue="Genre" @bind-SelectedValue="Band.Genre">
+			@foreach(Genre genre in Enum.GetValues(typeof(Genre)))
+			{
+				<SelectItem Value="@genre">@genre.ToString()</SelectItem>	
+			}
+		</Select>
+	</Field>
+	<Field>
+		<Button Color="Color.Primary" Clicked="HandleSubmit">Submit</Button>
+	</Field>
+</Form>
+
+@code {
+	private Band Band { get; set; } = new();
+
+	private async void HandleSubmit()
+	{
+		await RepositoryBand.AddAsync(Band);
+		await RepositoryBand.SaveChangesAsync();
+
+		NavManager.NavigateTo("/");
+	}
+}
