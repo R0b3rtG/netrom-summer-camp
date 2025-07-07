@@ -2,9 +2,39 @@
 {
     public enum Genre
     {
-        Rap,
         Rock,
-        Metal,
-        HipHop
-    }
+        HeavyMetal,
+        MetalCore,
+        BlackMetal,
+        DoomMetal,
+        DeathMetal,
+        NuMetal,
+        AlternativeRock,
+        IndieRock,
+        PunkRock,
+        PostRock,
+        Grunge,
+		Trap,
+		HipHop,
+		Rap,
+		EDM,
+        House,
+        Techno,
+        Dubstep,
+        Trance,
+        DrumAndBass,
+        Synthwave,
+        Ambient,
+		Pop,
+        KPop,
+        RnB,
+        Soul,
+		Classical,
+        Jazz,
+        Blues,
+        Folk,
+        Reggae,
+        Country,
+        Manele,
+	}
 }

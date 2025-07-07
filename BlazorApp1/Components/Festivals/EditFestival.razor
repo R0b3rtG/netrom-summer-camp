@@ -1,0 +1,64 @@
+﻿ @rendermode InteractiveServer
+
+ @inject IRepositoryFestival RepositoryFestival
+
+ @using BlazorApp1.Entities
+ @using BlazorApp1.Repositories.Interfaces
+
+ <Modal @ref="_modalRef">
+ 	<ModalContent Centered>
+ 		<ModalHeader>
+ 			<ModalTitle>Festival edit</ModalTitle>
+ 			<CloseButton />
+ 		</ModalHeader>
+ 		<ModalBody>
+ 			<Field>
+ 				<FieldLabel>Name</FieldLabel>
+ 				<TextEdit @bind-Text="_festival.Name" Placeholder="Enter Name..." />
+ 			</Field>
+ 			<Field>
+ 				<FieldLabel>Location</FieldLabel>
+ 				<TextEdit @bind-Text="_festival.Location" Placeholder="Enter Location..." />
+ 			</Field>
+ 			<Field style="position: relative;">
+ 				<FieldLabel>Start Date</FieldLabel>
+ 				<DatePicker @bind-Date="_festival.StartDate" TValue="DateTime?"></DatePicker>
+ 			</Field>
+ 			<Field style="position: relative;">
+ 				<FieldLabel>End Date</FieldLabel>
+ 				<DatePicker StaticPicker @bind-Date="_festival.EndDate" TValue="DateTime?"></DatePicker>
+ 			</Field>
+ 		</ModalBody>
+ 		<ModalFooter>
+ 			<Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
+ 			<Button Color="Color.Primary" Clicked="HandleSave">Save Changes</Button>
+ 		</ModalFooter>
+ 	</ModalContent>
+ </Modal>
+
+ @code {
+ 	private Modal _modalRef = new();
+ 	private Festival _festival = new();
+
+ 	[Parameter] public EventCallback OnChange { get; set; }
+
+ 	public void ShowModal(Festival festival)
+ 	{
+ 		_festival = festival;
+ 		_modalRef.Show();
+ 	}
+
+ 	private void HideModal()
+ 	{
+ 		_modalRef.Hide();
+ 	}
+
+ 	private async Task HandleSave()
+ 	{
+ 		RepositoryFestival.Update(_festival);
+ 		await RepositoryFestival.SaveChangesAsync();
+ 		await OnChange.InvokeAsync();
+
+ 		await _modalRef.Hide();
+ 	}
+ }

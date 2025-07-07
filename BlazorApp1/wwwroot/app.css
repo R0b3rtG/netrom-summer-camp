@@ -6,6 +6,11 @@ a, .btn-link {
     color: #006bb7;
 }
 
+.width-limiter {
+    margin: auto;
+    max-width: 1500px;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;

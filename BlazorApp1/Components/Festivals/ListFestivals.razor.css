@@ -1,0 +1,36 @@
+﻿.festivals-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.festival-card {
+    width: 300px;
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #aaa;
+}
+
+.festival-img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+}
+
+.festival-title {
+    font-size: 1.4rem;
+}
+
+.festival-start,
+.festival-end{
+    font-size: 1.1rem;
+}
+
+.festival-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}

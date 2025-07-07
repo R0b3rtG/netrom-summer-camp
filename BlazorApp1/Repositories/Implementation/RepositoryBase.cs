@@ -6,13 +6,13 @@ namespace BlazorApp1.Repositories.Implementation
 {
     public class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {
-        private readonly ShowTimeContext _context;
+        protected readonly ShowTimeContext Context;
         private readonly DbSet<T> _dbSet;
 
         public RepositoryBase(ShowTimeContext context)
         {
-            _context = context;
-            _dbSet = _context.Set<T>();
+            Context = context;
+            _dbSet = Context.Set<T>();
         }
 
         public async Task AddAsync(T entity)
@@ -37,7 +37,7 @@ namespace BlazorApp1.Repositories.Implementation
 
         public async Task SaveChangesAsync()
         {
-            await _context.SaveChangesAsync();
+            await Context.SaveChangesAsync();
         }
 
         public void Update(T entity)

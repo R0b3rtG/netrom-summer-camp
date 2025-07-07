@@ -9,6 +9,6 @@ namespace BlazorApp1.Entities
 		public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Genre Genre { get; set; }
-        public ICollection<Festival> Festivals { get; set; } = [];
+        public ICollection<FestivalBand> FestivalBands { get; set; } = [];
     }
 }

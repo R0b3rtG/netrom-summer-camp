@@ -22,19 +22,70 @@ namespace BlazorApp1.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BandFestival", b =>
+            modelBuilder.Entity("BlazorApp1.Entities.ApplicationUser", b =>
                 {
-                    b.Property<Guid>("BandsId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("FestivalsId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
 
-                    b.HasKey("BandsId", "FestivalsId");
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("FestivalsId");
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
-                    b.ToTable("BandFestival");
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("BlazorApp1.Entities.Band", b =>
@@ -103,19 +154,153 @@ namespace BlazorApp1.Migrations
                     b.ToTable("Festivals");
                 });
 
-            modelBuilder.Entity("BandFestival", b =>
+            modelBuilder.Entity("BlazorApp1.Entities.FestivalBand", b =>
                 {
-                    b.HasOne("BlazorApp1.Entities.Band", null)
-                        .WithMany()
-                        .HasForeignKey("BandsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("FestivalId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasOne("BlazorApp1.Entities.Festival", null)
-                        .WithMany()
-                        .HasForeignKey("FestivalsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("BandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("FestivalId", "BandId");
+
+                    b.HasIndex("BandId");
+
+                    b.ToTable("FestivalBands");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("BlazorApp1.Entities.Booking", b =>
@@ -129,9 +314,86 @@ namespace BlazorApp1.Migrations
                     b.Navigation("Festival");
                 });
 
+            modelBuilder.Entity("BlazorApp1.Entities.FestivalBand", b =>
+                {
+                    b.HasOne("BlazorApp1.Entities.Band", "Band")
+                        .WithMany("FestivalBands")
+                        .HasForeignKey("BandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlazorApp1.Entities.Festival", "Festival")
+                        .WithMany("FestivalBands")
+                        .HasForeignKey("FestivalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Band");
+
+                    b.Navigation("Festival");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlazorApp1.Entities.Band", b =>
+                {
+                    b.Navigation("FestivalBands");
+                });
+
             modelBuilder.Entity("BlazorApp1.Entities.Festival", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("FestivalBands");
                 });
 #pragma warning restore 612, 618
         }

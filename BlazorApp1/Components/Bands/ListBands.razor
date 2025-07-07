@@ -1,10 +1,14 @@
 ﻿@page "/list-bands"
+@rendermode InteractiveServer
+
+@inject IRepositoryBand RepositoryBand
 
 @using BlazorApp1.Entities
 @using BlazorApp1.Repositories.Interfaces
-@inject IRepositoryBand RepositoryBand
 @using Blazorise.DataGrid
 @using BlazorApp1.Enums
+
+<PageTitle>Bands</PageTitle>
 
 <DataGrid 
 	TItem="Band"
@@ -19,6 +23,13 @@
 	<DataGridColumns>
 		<DataGridColumn Caption="Name" TItem="Band" Field="@nameof(Band.Name)"></DataGridColumn>
 		<DataGridColumn Caption="Genre" TItem="Band" Field="@nameof(Band.Genre)"></DataGridColumn>
+		<DataGridColumn TItem="Band" Caption="Actions">
+			<DisplayTemplate>
+				<Button Color="Color.Danger" Clicked="() => DeleteBand(context)">
+					Delete
+				</Button>
+			</DisplayTemplate>
+		</DataGridColumn>
 	</DataGridColumns>
 </DataGrid>
 
@@ -28,5 +39,13 @@
 	protected override async Task OnInitializedAsync()
 	{
 		_bands = (await RepositoryBand.GetAllAsync()).ToList();
+	}
+
+	public async void DeleteBand(Band band)
+	{
+		RepositoryBand.Delete(band);
+		await RepositoryBand.SaveChangesAsync();
+		_bands = _bands?.Where(b => b.Id != band.Id).ToList();
+		StateHasChanged();
 	}
 }

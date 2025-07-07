@@ -9,7 +9,7 @@ namespace BlazorApp1.Entities
         public string Location { get; set; } = string.Empty;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public ICollection<Band> Bands { get; set; } = [];
+        public ICollection<FestivalBand> FestivalBands { get; set; } = [];
         public ICollection<Booking> Bookings { get; set; } = [];
     }
 }
