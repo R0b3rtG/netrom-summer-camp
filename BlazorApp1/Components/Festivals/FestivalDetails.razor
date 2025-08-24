@@ -1,0 +1,122 @@
+﻿@page "/festival/{id}"
+
+@rendermode InteractiveServer
+
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IRepositoryFestival RepositoryFestival
+@inject IRepositoryBooking RepositoryBooking
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager
+
+@if(_festival != null)
+{   
+    <img class="festival-banner" src="data:@_festival?.ImageMimeType;base64,@Convert.ToBase64String(_festival.ImageData)" />
+    <section class="festival-info-section">
+        <h1 class="festival-title">@_festival.Name</h1>
+        <div class="flex-container">
+            <span class="festival-period">@_festival.StartDate?.ToString("dd.MM.yyyy") - @_festival.EndDate?.ToString("dd.MM.yyyy")</span>
+            <span class="festival-location">Location: @_festival.Location</span>
+        </div>
+        <h3 class="mb-4">Lineup</h3>
+        @if (_festival.FestivalBands != null)
+        {
+            <div class="band-container">
+                @foreach (FestivalBand festivalBand in _festival.FestivalBands)
+                {
+                    <div class="band-card">
+                        <img class="band-img" src="data:@festivalBand.Band?.ImageMimeType;base64,@Convert.ToBase64String(festivalBand.Band.ImageData.ToArray())" alt="Festival Image" />
+                        <h2 class="band-title">@festivalBand.Band.Name</h2>
+                        <p class="band-genre">@GetDisplayName(festivalBand.Band.Genre)</p>
+                    </div>
+
+                }
+            </div>
+        }
+    </section>
+        
+
+    <div class="flex-price-container" style="position: relative;">
+        <Alert style="position: absolute; bottom: 0; left: 0;" Color="Color.Warning" @bind-Visible="@_warningAlertVisible">
+            <AlertMessage>
+                You already booked this festival. Go to your shopping cart to finish the checkout.
+            </AlertMessage>
+        </Alert>
+        <Alert style="position: absolute; bottom: 0; left: 0;" Color="Color.Success" @bind-Visible="@_successAlertVisible">
+            <AlertMessage>
+                You successfully booked this festival. Go to your shopping cart to finish the checkout.
+            </AlertMessage>
+        </Alert>
+        <p class="festival-price">Price: @_festival.Price RON</p>
+        @if(_username != null)
+        {
+            <button @onclick="BookTicket" class="book-ticket-btn">Book Ticket</button>
+        } else
+        {
+            <button @onclick="GoToLogin" class="book-ticket-btn">Book Ticket</button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+    private bool _warningAlertVisible = false;
+    private bool _successAlertVisible = false;
+
+    private Festival? _festival;
+
+    private bool _booked = false;
+    private string _username = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Guid guid = Guid.Parse(id);
+        _festival = (await RepositoryFestival.GetFestivalById(guid)).ToList()[0];
+
+        _username = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+        _booked = _festival?.Bookings?.Where(bk => bk.Email == _username && bk.FestivalId == guid)?.ToList().Count != 0;
+    }
+
+    private void GoToLogin()
+    {
+        NavManager.NavigateTo("/Account/Login");
+    }
+
+    private async Task BookTicket()
+    {
+        if(!_booked)
+        {
+            Booking booking = new Booking
+            {
+                Email = _username,
+                Festival = _festival,
+                FestivalId = _festival.Id,
+                Date = DateTime.Now
+            };
+            await RepositoryBooking.AddAsync(booking);
+            await RepositoryBooking.SaveChangesAsync();
+            _booked = true;
+            _successAlertVisible = true;
+            StateHasChanged();
+            await Task.Delay(4000);
+            _successAlertVisible = false;
+        } else
+        {
+            _warningAlertVisible = true;
+            await Task.Delay(4000);
+            _warningAlertVisible = false;
+        }
+    }
+
+    public string GetDisplayName(Enum value)
+    {
+        var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+        var display = member?.GetCustomAttribute<DisplayAttribute>();
+        return display?.Name ?? value.ToString();
+    }
+}

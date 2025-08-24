@@ -1,0 +1,50 @@
+﻿@rendermode InteractiveServer
+
+@inject IRepositoryBand RepositoryBand
+@inject NavigationManager NavManager
+
+@using BlazorApp1.Repositories.Interfaces
+@using BlazorApp1.Entities
+
+<Modal @ref="_modalRef">
+	<ModalContent Centered>
+		<ModalHeader>
+			<ModalTitle>Delete Band</ModalTitle>
+			<CloseButton />
+		</ModalHeader>
+		<EditForm Model="_band" OnValidSubmit="HandleSubmit">
+			<ModalBody>
+				<p>Are you sure you want to delete this band?</p>
+			</ModalBody>
+			<ModalFooter>
+				<Button Color="Color.Secondary" Clicked="HideModal">Cancel</Button>
+				<Button Color="Color.Danger" Type="ButtonType.Submit">Yes</Button>
+			</ModalFooter>
+		</EditForm>
+	</ModalContent>
+</Modal>
+
+@code {
+	private Modal _modalRef = new();
+	private Band _band = new();
+	[Parameter] public EventCallback OnChange { get; set; }
+
+	public async Task ShowModal(Band band)
+	{
+		_band = band;
+		await _modalRef.Show();
+	}
+
+	private void HideModal()
+	{
+		_modalRef.Hide();
+	}
+
+	private async Task HandleSubmit()
+	{
+		RepositoryBand.Delete(_band);
+		await RepositoryBand.SaveChangesAsync();
+		await OnChange.InvokeAsync();
+		await _modalRef.Hide();
+	}
+}

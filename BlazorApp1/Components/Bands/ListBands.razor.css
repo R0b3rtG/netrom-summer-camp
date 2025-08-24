@@ -1,0 +1,73 @@
+﻿.band-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 3rem;
+}
+
+.band-card {
+    margin-bottom: 2rem;
+    color: #000;
+    width: 350px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .band-card:hover {
+        transform: translateY(-10px);
+    }
+
+.band-img {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+}
+
+.band-title {
+    font-size: 1.7rem;
+    margin: 0.5rem 0;
+}
+
+.band-genre {
+    color: #888;
+}
+
+.band-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.button {
+    background-color: #fff;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease-in-out;
+    font-family: 'Oswald', sans-serif;
+}
+
+.add-button-div {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: right;
+    align-items: center;
+}
+
+.search-section-flex {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.search-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

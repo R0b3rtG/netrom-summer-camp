@@ -1,5 +1,4 @@
 ﻿@rendermode InteractiveServer
-@page "/create-festival"
 
 @inject IRepositoryFestival RepositoryFestival
 @inject NavigationManager NavManager
@@ -10,35 +9,53 @@
 <Modal @ref="_modalRef">
 	<ModalContent Centered>
 		<ModalHeader>
-			<ModalTitle>Festival edit</ModalTitle>
+			<ModalTitle>Create Festival</ModalTitle>
 			<CloseButton />
 		</ModalHeader>
-		<ModalBody>
-			<Form>
-				<Field>
+		<EditForm Model="_festival" OnValidSubmit="HandleSubmit">
+			<ModalBody>
+				<DataAnnotationsValidator />
+				<Field style="margin-bottom: 2rem;">
 					<FieldLabel>Name</FieldLabel>
 					<TextEdit @bind-text="_festival.Name"></TextEdit>
+					<ValidationMessage style="position: absolute;" For="() => _festival.Name" class="text-danger" />
 				</Field>
-				<Field>
+				<Field style="margin-bottom: 2rem;">
 					<FieldLabel>Location</FieldLabel>
 					<TextEdit @bind-text="_festival.Location"></TextEdit>
+					<ValidationMessage style="position: absolute;" For="() => _festival.Location" class="text-danger" />
 				</Field>
-				<Field>
-					<Field style="position: relative;">
-						<FieldLabel>Start Date</FieldLabel>
-						<DatePicker TValue="DateTime?" @bind-Date="_festival.StartDate"></DatePicker>
-					</Field>
-					<Field style="position: relative;">
-						<FieldLabel>End Date</FieldLabel>
-						<DatePicker TValue="DateTime?" @bind-Date="_festival.EndDate"></DatePicker>
-					</Field>
+				<Field style="margin-bottom: 2rem;">
+					<FieldLabel>Price</FieldLabel>
+					<InputNumber style="display: block; border: 1px solid #ddd; width: 100%; padding: .4rem; border-radius: 7px;" @bind-Value="_festival.Price"></InputNumber>
+					<ValidationMessage style="position: absolute;" For="() => _festival.Price" class="text-danger" />
 				</Field>
-			</Form>
-		</ModalBody>
-		<ModalFooter>
-			<Button Color="Color.Secondary" Clicked="HideModal">Cancel</Button>
-			<Button Color="Color.Success" Clicked="HandleSubmit">Create</Button>
-		</ModalFooter>
+				<Field style="margin-bottom: 2rem; position: relative;">
+					<FieldLabel>Start Date</FieldLabel>
+					<DatePicker TValue="DateTime?" @bind-Date="_festival.StartDate"></DatePicker>
+					<ValidationMessage style="position: absolute;" For="() => _festival.StartDate" class="text-danger" />
+				</Field>
+				<Field style="margin-bottom: 2rem; position: relative;">
+					<FieldLabel>End Date</FieldLabel>
+					<DatePicker TValue="DateTime?" @bind-Date="_festival.EndDate"></DatePicker>
+					<ValidationMessage style="position: absolute;" For="() => _festival.EndDate" class="text-danger" />
+				</Field>
+				<Field style="margin-bottom: 2rem;">
+					<InputFile OnChange="HandleFileChange" accept=".jpg,.jpeg,.png" />
+					<div style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center;">
+						@if (_imagePreview != null)
+						{
+							<img src="@_imagePreview" style="max-width: 200px;" />
+						}
+					</div>
+					<ValidationMessage style="position: absolute;" For="() => _festival.ImageData" class="text-danger" />
+				</Field>
+			</ModalBody>
+			<ModalFooter>
+				<Button Color="Color.Secondary" Clicked="HideModal">Cancel</Button>
+				<Button Color="Color.Success" Type="ButtonType.Submit">Create</Button>
+			</ModalFooter>
+		</EditForm>
 	</ModalContent>
 </Modal>
 
@@ -47,8 +64,25 @@
 	private Festival _festival = new();
 	[Parameter] public EventCallback OnChange { get; set; }
 
+	private string? _imagePreview;
+	private byte[]? _imageData;
+
+	private async Task HandleFileChange(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		using var stream = new MemoryStream();
+		await file.OpenReadStream(maxAllowedSize: 20_000_000).CopyToAsync(stream);
+
+		_imageData = stream.ToArray();
+		_imagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(_imageData)}";
+
+		_festival.ImageData = _imageData;
+		_festival.ImageMimeType = file.ContentType;
+	}
+
 	public void ShowModal()
 	{
+		_imagePreview = "";
 		_festival = new();
 		_modalRef.Show();	
 	}

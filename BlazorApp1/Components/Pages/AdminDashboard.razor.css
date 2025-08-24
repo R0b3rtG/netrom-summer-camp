@@ -1,0 +1,103 @@
+﻿table {
+    width: 70%;
+    margin-bottom: 3rem;
+    border-collapse: collapse;
+    margin-inline: auto;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+table th,
+table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+    cursor: default;
+    background-color: #34495e; /* Dark slate */
+    color: #ecf0f1; /* Soft light gray */
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 16px 20px;
+    border-bottom: 2px solid #2c3e50;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+table tr:hover {
+    background-color: #f4f4f4;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+table tr:last-child td {
+    border-bottom: none;
+}
+
+table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+}
+
+h2, h3 {
+    text-align: center;
+    margin-block: 2rem;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.button {
+    color: white;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);
+}
+
+.button.accept {
+    background-color: #27ae60;
+}
+
+.button.refuse {
+    background-color: #ae2760;
+}
+
+.button.accept:hover {
+    background-color: #219150;
+    transform: translateY(-2px);
+}
+
+.button.refuse:hover {
+    background-color: #912150;
+    transform: translateY(-2px);
+}
+
+.button.accept:active {
+    background-color: #1e8449;
+    transform: scale(0.98);
+}
+
+.button.refuse:active {
+    background-color: #841e49;
+    transform: scale(0.98);
+}
+
+.nothing-found-message {
+    text-align: center;
+}

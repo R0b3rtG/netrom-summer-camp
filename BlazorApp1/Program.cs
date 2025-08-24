@@ -3,7 +3,6 @@ using BlazorApp1.Context;
 using BlazorApp1.Repositories.Interfaces;
 using Blazorise;
 using Blazorise.Bootstrap5;
-using Microsoft.Extensions.FileProviders;
 using Blazorise.Icons.FontAwesome;
 using Microsoft.EntityFrameworkCore;
 using BlazorApp1.Repositories.Implementation;
@@ -41,16 +40,18 @@ builder.Services
 builder.Services.AddDbContext<ShowTimeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnectionString")));
 
-builder.Services.AddScoped<IRepositoryBand, RepositoryBand>();
+builder.Services.AddScoped<IRepositoryApplicationUser, RepositoryApplicationUser>();
 builder.Services.AddScoped<IRepositoryFestival, RepositoryFestival>();
+builder.Services.AddScoped<IRepositoryBand, RepositoryBand>();
 builder.Services.AddScoped<IRepositoryBooking, RepositoryBooking>();
+builder.Services.AddScoped<IRepositoryUserRole, RepositoryUserRole>();
+builder.Services.AddScoped<IRepositoryRole, RepositoryRole>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ShowTimeContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
-
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddAuthenticationCore();
@@ -68,13 +69,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-//app.UseStaticFiles(new StaticFileOptions
-//{
-//	FileProvider = new PhysicalFileProvider(
-//		   Path.Combine(builder.Environment.ContentRootPath, "img")),
-//	RequestPath = "/img"
-//});
 
 app.UseStaticFiles();
 app.UseAntiforgery();

@@ -1,0 +1,74 @@
+﻿@page "/bookings"
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+@using Blazorise.DataGrid
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IRepositoryBooking RepositoryBooking
+
+<PageTitle>My Bookings</PageTitle>
+
+<h3>Your Purchased Bookings</h3>
+
+<table>
+	<tr>
+		<th>Name</th>
+		<th>Booked On</th>
+		<th>Period</th>
+		<th>Price</th>
+		<th></th>
+	</tr>
+	@if(_bookings?.Count != 0)
+	{
+		@foreach (Booking booking in _bookings)
+		{
+			<tr class="booking">
+				<td><a href="/festival/@booking.Festival.Id">@booking.Festival?.Name</a></td>
+				<td>@booking.Date</td>
+				<td>@booking.Festival?.StartDate?.ToString("dd.MM.yyyy") - @booking.Festival?.EndDate?.ToString("dd.MM.yyyy")</td>
+				<td>@booking.Festival?.Price RON</td>
+				<td>
+					@if(!booking.RefundRequested)
+					{	
+						<button class="refund-btn" @onclick="() => RequestRefund(booking)">Refund</button>
+					} else
+					{
+						<div class="px-3">Pending</div>
+					}
+				</td>
+			</tr>
+		}
+	} else
+	{
+		<tr>
+			<td colspan="5" class="nothing-found-message">
+				No bookings to display.
+			</td>
+		</tr>
+	}
+</table>
+
+@code {
+	private List<Booking>? _bookings = new();
+	private string _username = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_username = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+		_bookings = (await RepositoryBooking.GetPaidBookingsAsync(_username)).ToList();
+	}
+
+	private async Task RequestRefund(Booking booking)
+	{
+		booking.RefundRequested = true;
+		RepositoryBooking.Update(booking);
+		await RepositoryBooking.SaveChangesAsync();
+		_bookings = (await RepositoryBooking.GetPaidBookingsAsync(_username)).ToList();
+	}
+}

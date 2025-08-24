@@ -1,6 +1,7 @@
 ﻿@rendermode InteractiveServer
 
 @inject IRepositoryFestival RepositoryFestival
+@inject IRepositoryBand RepositoryBand
 
 @using BlazorApp1.Entities
 @using BlazorApp1.Repositories.Interfaces
@@ -8,36 +9,35 @@
 <Modal @ref="_modalRef">
 	<ModalContent Centered>
 		<ModalHeader>
-			<ModalTitle>LineUp Edit</ModalTitle>
+			<ModalTitle>Edit Lineup</ModalTitle>
 			<CloseButton />
 		</ModalHeader>
 		<ModalBody>
-			@* <p>@_festivalBands.Count</p>
-			<DropContainer TItem="DropItem" Items="@items" ItemsFilter="@((item, dropZone) => item.Group == dropZone)" ItemDropped="@ItemDropped" Flex="Flex.Wrap.Grow.Is1">
-				<ChildContent>
-					<DropZone TItem="DropItem" Name="" Border="Border.Rounded" Background="Background.Light" Padding="Padding.Is3" Margin="Margin.Is3" Flex="Flex.Grow.Is1">
-						<Heading Size="HeadingSize.Is4" Margin="Margin.Is3.FromBottom">Basket</Heading>
-					</DropZone>
-					<DropZone TItem="DropItem" Name="Fruit" DropAllowed="@((item) => item.Fruit)" Border="Border.Rounded" Background="Background.Light" Padding="Padding.Is3" Margin="Margin.Is3" Flex="Flex.Grow.Is1">
-						<Heading Size="HeadingSize.Is4" Margin="Margin.Is3.FromBottom">Fruit</Heading>
-					</DropZone>
-					<DropZone TItem="DropItem" Name="Vegetable" DropAllowed="@((item) => !item.Fruit)" Border="Border.Rounded" Background="Background.Light" Padding="Padding.Is3" Margin="Margin.Is3" Flex="Flex.Grow.Is1">
-						<Heading Size="HeadingSize.Is4" Margin="Margin.Is3.FromBottom">Vegetable</Heading>
-					</DropZone>
-				</ChildContent>
-				<ItemTemplate>
-					<Card Shadow="Shadow.Default" Margin="Margin.Is3.OnY">
-						<CardBody>
-							<Image Source="@context.Image" Text="DragDrop image example" Style="width:48px;height:48px;" />
-							@context.Name
-						</CardBody>
-					</Card>
-				</ItemTemplate>
-			</DropContainer> *@
-			@foreach(Band band in _bands)
-			{
-				<p>@band.Name</p>
-			}
+			<Label>Search by name</Label>
+			<TextEdit Text="@_searchFilter" TextChanged="FilterBands"></TextEdit>
+			<div style="display: flex; margin: 1rem 0; gap: 1rem;">
+				<div style="width: 100%;">
+					<h5 style="text-align: center; margin-bottom: 1rem;">Search Results</h5>
+					<div style="height: 250px; width: 100%; overflow-block: scroll;">
+						@if (_filterResults != null)
+						{
+							@foreach (Band band in _filterResults)
+							{
+								<p style="background-color: #eee; padding: .3rem .7rem; border-radius: 10px;" @onclick="() => moveToLineup(band)">@band.Name</p>
+							}
+						}
+					</div>
+				</div>
+				<div style="width: 100%;">
+					<h5 style="text-align: center; margin-bottom: 1rem;">Lineup</h5>
+					<div style="height: 250px; width: 100%; overflow-block: scroll;">
+						@foreach (FestivalBand festivalBand in _festivalBands)
+						{
+							<p style="background-color: #eee; padding: .3rem .7rem; border-radius: 10px;" @onclick="() => removeFromLineup(festivalBand)">@festivalBand.Band?.Name</p>
+						}
+					</div>
+				</div>
+			</div>
 		</ModalBody>
 		<ModalFooter>
 			<Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
@@ -49,15 +49,66 @@
 @code {
 	private Modal _modalRef = new();
 	private Festival _festival = new();
-	private List<Band> _bands = new();
+	private List<FestivalBand> _festivalBands = new();
+
+	private string _searchFilter = string.Empty;
+	private List<Band> _filterResults = new();
+	private List<Band> _availableBands = new();
 
 	[Parameter] public EventCallback OnChange { get; set; }
 
-	public void ShowModal(Festival festival)
+	private void moveToLineup(Band band)
+	{
+		FestivalBand newFestivalBand = new FestivalBand
+			{
+				FestivalId = _festival.Id,
+				BandId = band.Id,
+				Band = band,
+				Festival = _festival,
+				Order = _festivalBands.Count + 1
+			};
+
+		_festivalBands.Add(newFestivalBand);
+		_filterResults = Filter();
+		StateHasChanged();
+	}
+
+	private void removeFromLineup(FestivalBand festivalBand)
+	{
+		_festivalBands = _festivalBands.Where(fb => festivalBand != fb).ToList();
+		for(int i = 0; i < _festivalBands.Count; i++)
+		{
+			_festivalBands[i].Order = i + 1;
+		}
+		_filterResults = Filter();
+		StateHasChanged();
+	}
+
+	private void FilterBands(string newText)
+	{
+		_searchFilter = newText;
+		_filterResults = Filter();
+		StateHasChanged();
+	}
+
+	private List<Band> Filter()
+	{
+		return _availableBands
+			.Where(band => band.Name.ToLower()
+			.Contains(_searchFilter.ToLower())
+			&& !_festivalBands.Any(fb => fb.Band?.Name == band.Name))
+			.ToList();
+	}
+
+	public async Task ShowModal(Festival festival)
 	{
 		_festival = festival;
-		_bands = festival.FestivalBands.Select(fb => fb.Band).ToList();
-		_modalRef.Show();
+		_festivalBands = festival.FestivalBands.ToList();
+
+		_availableBands = (await RepositoryBand.GetAllAsync()).ToList();
+		_filterResults = Filter();
+
+		await _modalRef.Show();
 	}
 
 	private void HideModal()
@@ -67,47 +118,11 @@
 
 	private async Task HandleSave()
 	{
+		_festival.FestivalBands = _festivalBands;
 		RepositoryFestival.Update(_festival);
 		await RepositoryFestival.SaveChangesAsync();
 		await OnChange.InvokeAsync();
 
 		await _modalRef.Hide();
-	}
-
-	public class DropItem
-	{
-		public string Name { get; init; }
-
-		public string Group { get; set; }
-
-		public string Image { get; set; }
-
-		public bool Fruit { get; set; }
-	}
-
-	protected override async Task OnInitializedAsync()
-	{
-		// List<Festival> festivals = (await RepositoryFestival.GetAllFestivalWithBands()).ToList();
-		// _festivalBands = festivals.Where(f => f.Name == _festival.Name).ToList();
-		// _festivalBands = festivals.Select(f => f.FestivalBands.ToList()).ToList();
-	}
-	
-	private List<Festival> _festivalBands = new();
-
-	private List<DropItem> items = new()
-	{
-		new DropItem() { Name = "Apple", Group = "Basket", Image = "img/fruit/apple.png", Fruit = true },
-		new DropItem() { Name = "Bananas", Group = "Basket", Image = "img/fruit/bananas.png", Fruit = true },
-		new DropItem() { Name = "Lemon", Group = "Fruit", Image = "img/fruit/lemon.png", Fruit = true },
-		new DropItem() { Name = "Broccoli", Group = "Basket", Image = "img/fruit/broccoli.png" },
-		new DropItem() { Name = "Strawberry", Group = "Fruit", Image = "img/fruit/strawberry.png", Fruit = true },
-		new DropItem() { Name = "Cherry", Group = "Basket", Image = "img/fruit/cherry.png", Fruit = true },
-		new DropItem() { Name = "Cabbage", Group = "Vegetable", Image = "img/fruit/cabbage.png" },
-	};
-
-	private Task ItemDropped(DraggableDroppedEventArgs<DropItem> dropItem)
-	{
-		dropItem.Item.Group = dropItem.DropZoneName;
-		return Task.CompletedTask;
 	}
 }

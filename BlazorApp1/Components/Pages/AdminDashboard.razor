@@ -1,0 +1,206 @@
+﻿@page "/admin-dashboard"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "admin")]
+
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject IRepositoryBooking RepositoryBooking
+@inject IRepositoryApplicationUser RepositoryApplicationUser
+@inject IRepositoryRole RepositoryRole
+@inject IRepositoryUserRole RepositoryUserRole
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<h1>Admin Dashboard</h1>
+
+<h3>Refund Requests</h3>
+
+<table>
+	<tr>
+		<th>User</th>
+		<th>Name</th>
+		<th>Booked On</th>
+		<th>Period</th>
+		<th>Price</th>
+		<th></th>
+	</tr>
+	@if(_refundedBookings.Count != 0)
+	{
+		@foreach (Booking booking in _refundedBookings)
+		{
+			<tr>
+				<td>@booking.Email</td>
+				<td><a href="/festival/@booking.Festival?.Id">@booking.Festival?.Name</a></td>
+				<td>@booking.Date</td>
+				<td>@booking.Festival?.StartDate?.ToString("dd.MM.yyyy") - @booking.Festival?.EndDate?.ToString("dd.MM.yyyy")</td>
+				<td>@booking.Festival?.Price RON</td>
+				<td>
+					<button class="button accept" @onclick="() => AcceptRefund(booking)">Accept</button>
+					<button class="button refuse" @onclick="() => RefuseRefund(booking)">Refuse</button>
+				</td>
+			</tr>
+		}
+	} else
+	{
+		<tr>
+			<td colspan="6" class="nothing-found-message">
+				No refund requests to manage.
+			</td>
+		</tr>
+	}
+</table>
+
+<h3>Booking History</h3>
+<table>
+	<tr>
+		<th>User</th>
+		<th>Name</th>
+		<th>Booked On</th>
+		<th>Period</th>
+		<th>Price</th>
+	</tr>
+	@if(_bookings.Count != 0) {
+		@foreach (Booking booking in _bookings)
+		{
+			<tr>
+				<td>@booking.Email</td>
+				<td><a href="/festival/@booking.Festival?.Id">@booking.Festival?.Name</a></td>
+				<td>@booking.Date</td>
+				<td>@booking.Festival?.StartDate?.ToString("dd.MM.yyyy") - @booking.Festival?.EndDate?.ToString("dd.MM.yyyy")</td>
+				<td>@booking.Festival?.Price RON</td>
+			</tr>
+		}
+	} else {
+		<tr>
+			<td colspan="5" class="nothing-found-message">
+				No bookings in history.
+			</td>
+		</tr>
+	}
+</table>
+
+<h3>Users</h3>
+
+<table>
+	<tr>
+		<th>User</th>
+		<th>Role</th>
+		<th></th>
+	</tr>
+	@if(_usersWithRoles.Count != 0)
+	{
+		@foreach (UserWithRoles userRole in _usersWithRoles)
+		{
+			<tr>
+				<td>@userRole.User?.Email</td>
+				<td>@userRole.Role?.Name</td>
+				<td>
+					@if (userRole.User?.Email != _currentUsername)
+					{
+						@if (userRole.Role?.Name == "admin")
+						{
+							<button class="button refuse" @onclick="() => UngrantAdmin(userRole.User)">Ungrant Admin</button>
+						} else
+						{
+							<button class="button accept" @onclick="() => GrantAdmin(userRole.User)">Grant Admin</button>
+						}
+					}
+				</td>
+			</tr>
+		}
+	} else
+	{
+		<tr>
+			<td colspan="2" class="nothing-found-message">
+				No users to display.
+			</td>
+		</tr>
+	}
+</table>
+
+@code {
+	private List<Booking> _bookings = new();
+	private List<Booking> _refundedBookings = new();
+	private List<UserWithRoles> _usersWithRoles = new();
+
+	private string _currentUsername = string.Empty;
+
+	private async Task GetUsersWithRoles()
+	{
+		var users = (await RepositoryApplicationUser.GetAllAsync()).ToList();
+		var roles = (await RepositoryRole.GetAllAsync()).ToList();
+		var userRoles = (await RepositoryUserRole.GetAllAsync()).ToList();
+
+		_usersWithRoles = new();
+
+		foreach (var userRole in userRoles)
+		{
+			ApplicationUser? user = users.Find(u => u.Id == userRole.UserId);
+			IdentityRole<Guid>? role = roles.Find(r => r.Id == userRole.RoleId);
+			_usersWithRoles.Add(new UserWithRoles
+			{
+				User = user,
+				Role = role,
+			});
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_currentUsername = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+		_refundedBookings = (await RepositoryBooking.GetRefundedBookingsAsync()).ToList();
+		_bookings = (await RepositoryBooking.GetAllPaidBookingsAsync()).ToList();
+
+		await GetUsersWithRoles();
+	}
+
+	private async Task AcceptRefund(Booking booking)
+	{
+		_bookings = _bookings.Where(b => b.Id != booking.Id).ToList();
+		_refundedBookings = _refundedBookings.Where(b => b.Id != booking.Id).ToList();
+		RepositoryBooking.Delete(booking);
+		await RepositoryBooking.SaveChangesAsync();
+	}
+
+	private async Task RefuseRefund(Booking booking)
+	{
+		_refundedBookings = _refundedBookings.Where(b => b.Id != booking.Id).ToList();
+		booking.RefundRequested = false;
+		RepositoryBooking.Update(booking);
+		await RepositoryBooking.SaveChangesAsync();
+	}
+
+	private async Task GrantAdmin(ApplicationUser user)
+	{
+		if (user != null)
+		{
+			await UserManager.AddToRoleAsync(user, "admin");
+			await UserManager.RemoveFromRoleAsync(user, "user");
+			await GetUsersWithRoles();
+			StateHasChanged();
+		}
+	}
+
+	private async Task UngrantAdmin(ApplicationUser user)
+	{
+		if (user != null)
+		{
+			await UserManager.AddToRoleAsync(user, "user");
+			await UserManager.RemoveFromRoleAsync(user, "admin");
+			await GetUsersWithRoles();
+			StateHasChanged();
+		}
+	}
+
+	public class UserWithRoles
+	{
+		public ApplicationUser? User { get; set; }
+		public IdentityRole<Guid>? Role { get; set; }
+	}
+}

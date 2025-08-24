@@ -29,6 +29,7 @@ namespace BlazorApp1.Context
 				.HasOne(fb => fb.Band)
 				.WithMany(b => b.FestivalBands)
 				.HasForeignKey(fb => fb.BandId);
+
 			base.OnModelCreating(modelBuilder);
 		}
 	}

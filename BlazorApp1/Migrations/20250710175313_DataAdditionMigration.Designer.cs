@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorApp1.Migrations
 {
     [DbContext(typeof(ShowTimeContext))]
-    [Migration("20250707080515_AuthMigration")]
-    partial class AuthMigration
+    [Migration("20250710175313_DataAdditionMigration")]
+    partial class DataAdditionMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace BlazorApp1.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BlazorApp1.Entities.User", b =>
+            modelBuilder.Entity("BlazorApp1.Entities.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -100,6 +100,14 @@ namespace BlazorApp1.Migrations
                     b.Property<int>("Genre")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ImageMimeType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -125,6 +133,12 @@ namespace BlazorApp1.Migrations
                     b.Property<Guid>("FestivalId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("Purchased")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RefundRequested")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FestivalId");
@@ -138,8 +152,16 @@ namespace BlazorApp1.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ImageMimeType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -149,7 +171,10 @@ namespace BlazorApp1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -347,7 +372,7 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("BlazorApp1.Entities.User", null)
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -356,7 +381,7 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("BlazorApp1.Entities.User", null)
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -371,7 +396,7 @@ namespace BlazorApp1.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BlazorApp1.Entities.User", null)
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -380,7 +405,7 @@ namespace BlazorApp1.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("BlazorApp1.Entities.User", null)
+                    b.HasOne("BlazorApp1.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

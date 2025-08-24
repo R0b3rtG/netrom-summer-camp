@@ -3,22 +3,27 @@ header {
     top: 0;
     width: 100vw;
     z-index: 1000;
-    padding-block: .5rem;
+    padding: .5rem 1rem;
     background-color: rgba(120, 120, 120, .3);
     backdrop-filter: blur(10px);
-}
-
-header .width-limiter {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+
+.account-options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 
 header img {
     height: 60px;
 }
 
 nav {
+    margin-left: -8.5rem;
     display: flex;
     gap: 1rem;
     align-items: center;
@@ -29,13 +34,31 @@ nav {
 }
 
 .nav-item ::deep .nav-link {
+    position: relative;
     padding-block: .5rem;
     padding-inline: .7rem;
-    font-weight: 700;
-    color: #333;
+    font-weight: 500;
+    color: #000;
+    border-bottom-color: transparent;
+    border-bottom-width: 3px;
+    border-bottom-style: solid;
 }
 
-.nav-item ::deep .nav-link.active {
-    border-radius: 10px;
-    background-color: #eee;
+.nav-item ::deep .nav-link:not(.no-underline).active {
+    border-bottom-color: #000;
+}
+
+.bookings_count {
+    display: grid;
+    place-content: center;
+    background-color: #f00;
+    color: #fff;
+    font-size: .9rem;
+    height: 50%;
+    aspect-ratio: 1;
+    text-align: center;
+    border-radius: 100%;
+    position: absolute;
+    top: -3px;
+    right: -3px;
 }

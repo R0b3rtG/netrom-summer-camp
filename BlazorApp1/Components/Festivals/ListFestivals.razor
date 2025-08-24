@@ -8,88 +8,154 @@
 @using BlazorApp1.Entities
 @using BlazorApp1.Repositories.Interfaces
 @using Blazorise.DataGrid
-@using System.Globalization
 @using BlazorApp1.Components.Bands
+@using System.Text.Json
 
 <PageTitle>Festivals</PageTitle>
 
+<div class="search-section-flex">
+	<div>
+		<div class="small-filler-div"></div>
+		<AuthorizeView Roles="admin">
+			<Authorized>
+				<div class="filler-div" style="width: 150px;"></div>
+			</Authorized>
+		</AuthorizeView>
+	</div>
+	
+	<div class="search-field-wrapper">
+		<Label>Search festival</Label>
+		<TextEdit style="width: 400px;" Text="@_searchFilter" TextChanged="FilterFestivals"></TextEdit>
+	</div>
+
+	<div>
+		<AuthorizeView Roles="admin">
+			<Authorized>
+				<div class="add-button-div" style="align-self: center;">
+					<Button Color="Color.Primary" Clicked="ShowCreateModal">Add New Festival</Button>
+				</div>
+			</Authorized>
+		</AuthorizeView>
+		<div class="small-filler-div"></div>
+	</div>
+</div>
+
 <div class="festivals-container">
-	@if (_festivals != null)
+	@if (_filterResults != null)
 	{
-		@foreach (Festival festival in _festivals)
+		@if(_filterResults.Count > 0)
 		{
-			<div class="festival-card">
-				<div class="festival-img"></div>
-				@* <img class="festival-img" alt="Festival Image" /> *@
-				<p class="festival-title">@festival.Name</p>
-				<p class="festival-start">@festival.Location</p>
-				<p class="festival-start">Starts: @festival.StartDate?.ToString("D", CultureInfo.CreateSpecificCulture("en-US"))</p>
-				<p class="festival-end">Ends: @festival.EndDate?.ToString("D", CultureInfo.CreateSpecificCulture("en-US"))</p>
-				<AuthorizeView Roles="admin">
-					<Authorized>
-						<div class="festival-actions">
-							<Button Color="Color.Secondary" Clicked="() => ShowEditModal(festival)">
-								Edit
-							</Button>
-							<Button Color="Color.Primary" Clicked="() => ShowLineUpModal(festival)">
-								LineUp
-							</Button>
-							<Button Color="Color.Danger" Clicked="() => DeleteFestival(festival)">
-								Delete
-							</Button>
+			@foreach (Festival festival in _filterResults)
+			{
+				<div class="festival-card">
+					@if(festival.ImageData != null)
+					{
+						<img class="festival-img" src="data:@festival.ImageMimeType;base64,@Convert.ToBase64String(festival.ImageData.ToArray())" alt="Festival Image" />
+					} else {
+						<div class="festival-img"></div>
+					}
+					<div class="info">
+						<h2 class="festival-title">@festival.Name</h2>
+						<span class="festival-start">@festival.StartDate?.ToString("dd.MM.yyyy") - @festival.EndDate?.ToString("dd.MM.yyyy") at @festival.Location</span>
+						<span class="festival-start"></span>
+						<div class="festival-actions d-flex flex-row gap-2">
+							<AuthorizeView Roles="admin">
+								<Authorized>
+									<button class="button" @onclick="() => ShowEditModal(festival)">
+										Edit
+									</button>
+									<button class="button" @onclick="() => ShowLineupModal(festival)">
+										Lineup
+									</button>
+									<button class="button" @onclick="() => ShowDeleteModal(festival)">
+										Delete
+									</button>
+								</Authorized>
+							</AuthorizeView>
+							<button class="button" @onclick="() => Navigate(festival.Id)">
+								Details
+							</button>
 						</div>
-					</Authorized>
-				</AuthorizeView>
-			</div>	
+					</div>
+				</div>	
+			}
+		} else
+		{
+			<p style="text-align: center; width: 100%;">
+				No results. Try searching something else.
+			</p>
 		}
 	}
 </div>
 
-<Button Color="Color.Primary" Clicked="ShowCreateModal">Add New Festival</Button>
-
-<EditFestival @ref="_editFestivalComponent" OnChange="ReloadList"></EditFestival>
-<CreateFestival @ref="_createFestivalComponent" OnChange="ReloadList"></CreateFestival>
-<EditLineUp @ref="_editLineUpComponent" OnChange="ReloadList"></EditLineUp>
+<EditFestival @ref="_editComponent" OnChange="ReloadList"></EditFestival>
+<CreateFestival @ref="_createComponent" OnChange="ReloadList"></CreateFestival>
+<EditLineup @ref="_editLineupComponent" OnChange="ReloadList"></EditLineup>
+<DeleteFestivalModal @ref="_deleteComponent" OnChange="ReloadList"></DeleteFestivalModal>
 
 @code {
-	private List<Festival> _festivals;
 	private Festival _festival = new();
 
-	private EditFestival _editFestivalComponent = new();
-	private CreateFestival _createFestivalComponent = new();
-	private EditLineUp _editLineUpComponent = new();
+	private EditFestival _editComponent = new();
+	private CreateFestival _createComponent = new();
+	private EditLineup _editLineupComponent = new();
+	private DeleteFestivalModal _deleteComponent = new();
+
+	private string _searchFilter = string.Empty;
+	private List<Festival> _filterResults = new();
+	private List<Festival> _availableFestivals = new();
 
 	private void ShowEditModal(Festival festival)
 	{
-		_editFestivalComponent.ShowModal(festival);
+		_editComponent.ShowModal(festival);
 	} 
 
 	private void ShowCreateModal()
 	{
-		_createFestivalComponent.ShowModal();
+		_createComponent.ShowModal();
 	}
 
-	private void ShowLineUpModal(Festival festival)
+	private void Navigate(Guid id)
 	{
-		_editLineUpComponent.ShowModal(festival);
+		NavManager.NavigateTo($"/festival/{id}");
+	}
+
+	private async Task ShowLineupModal(Festival festival)
+	{
+		await _editLineupComponent.ShowModal(festival);
+	}
+
+	public async Task ShowDeleteModal(Festival festival)
+	{
+		await _deleteComponent.ShowModal(festival);
 	}
 
 	private async Task ReloadList()
 	{
-		_festivals = (await RepositoryFestival.GetAllAsync()).ToList();
+		_availableFestivals = (await RepositoryFestival.GetAllFestivalWithBands()).ToList();
+		_filterResults = Filter();
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-		_festivals = (await RepositoryFestival.GetAllFestivalWithBands()).ToList();
-		Console.WriteLine(_festivals);
+		_availableFestivals = (await RepositoryFestival.GetAllFestivalWithBands()).ToList();
+		_filterResults = Filter();
 	}
 
-	public async Task DeleteFestival(Festival festival)
+	private void FilterFestivals(string newText)
 	{
-		RepositoryFestival.Delete(festival);
-		await RepositoryFestival.SaveChangesAsync();
-		_festivals = _festivals?.Where(f => f.Id != festival.Id).ToList();
+		_searchFilter = newText;
+		_filterResults = Filter();
 		StateHasChanged();
+	}
+
+	private List<Festival> Filter()
+	{
+		return _availableFestivals
+			.Where(
+				fest => fest.Name.ToLower().Contains(_searchFilter.ToLower()) ||
+				fest.Location.ToLower().Contains(_searchFilter.ToLower())
+			)
+			.ToList();
 	}
 }

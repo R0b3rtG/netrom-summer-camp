@@ -1,7 +1,53 @@
 ﻿@page "/"
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+
+@inject IRepositoryFestival RepositoryFestival
+@inject NavigationManager NavManager
 
 <PageTitle>Home</PageTitle>
 
-<h1>ShowTime!</h1>
+<div class="home-image-flex">
+	<img class="home-image" src="img/logo.png" />
+</div>
 
-<p>This is ShowTime! The best Festival/Concert Booking app.</p>
+<h1 class="home-title">Upcoming Events</h1>
+
+<div>
+	@foreach (Festival festival in _festivals)
+	{
+		<div class="festival-card">
+			@if(festival.ImageData != null)
+			{
+				<img class="festival-img" src="data:@festival.ImageMimeType;base64,@Convert.ToBase64String(festival.ImageData.ToArray())" alt="Festival Image" />
+			} else {
+				<div class="festival-img"></div>
+			}
+			<div class="info">
+				<h2 class="festival-title">@festival.Name</h2>
+				<span class="festival-start">@festival.StartDate?.ToString("dd.MM.yyyy") - @festival.EndDate?.ToString("dd.MM.yyyy") at @festival.Location</span>
+				<span class="festival-start"></span>
+				<div class="festival-actions d-flex flex-row gap-2">
+					<button class="button" @onclick="() => Navigate(festival.Id)">
+						Details
+					</button>
+				</div>
+			</div>
+		</div>	
+	}
+</div>
+
+@code {
+	private List<Festival> _festivals = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		_festivals = (await RepositoryFestival.GetAllFestivalWithBands()).ToList();
+		_festivals = _festivals.OrderBy(fest => fest.StartDate).Take(3).ToList();
+	}
+
+	private void Navigate(Guid id)
+	{
+		NavManager.NavigateTo($"/festival/{id}");
+	}
+}

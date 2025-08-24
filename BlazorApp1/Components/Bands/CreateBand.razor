@@ -1,38 +1,101 @@
 ﻿@rendermode InteractiveServer
-@page "/create-band"
 
 @inject IRepositoryBand RepositoryBand
-@inject NavigationManager NavManager
 
 @using BlazorApp1.Repositories.Interfaces
 @using BlazorApp1.Entities
 @using BlazorApp1.Enums
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
 
-<Form Style="width: 500px; margin-inline: auto;">
-	<Field>
-		<FieldLabel>Name</FieldLabel>
-		<TextEdit @bind-text="_band.Name"></TextEdit>
-	</Field>
-	<Field>
-		<Select TValue="Genre" @bind-SelectedValue="_band.Genre">
-			@foreach(Genre genre in Enum.GetValues(typeof(Genre)))
-			{
-				<SelectItem Value="@genre">@genre.ToString()</SelectItem>	
-			}
-		</Select>
-	</Field>
-	<Field>
-		<Button Color="Color.Primary" Clicked="HandleSubmit">Submit</Button>
-	</Field>
-</Form>
+<Modal @ref="_modalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Create Band</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+		<EditForm Model="_band" OnValidSubmit="HandleSubmit">
+				<ModalBody>
+					<DataAnnotationsValidator />
+					<Field>
+						<FieldLabel>Name</FieldLabel>
+						<TextEdit @bind-text="_band.Name"></TextEdit>
+						<ValidationMessage For="() => _band.Name" class="text-danger" />
+					</Field>
+					<Field>
+						<Select TValue="Genre" @bind-SelectedValue="_band.Genre">
+							@foreach (Genre genre in Enum.GetValues(typeof(Genre)))
+							{
+								<SelectItem Value="@genre">@GetDisplayName(genre)</SelectItem>
+							}
+						</Select>
+					</Field>
+					<Field>
+						<InputFile OnChange="HandleFileChange" accept=".jpg,.jpeg,.png" />
+						<div style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center;">
+							@if (_imagePreview != null)
+							{
+								<img src="@_imagePreview" style="max-width: 200px;" />
+							}
+						</div>
+						<ValidationMessage For="() => _band.ImageData" class="text-danger" />
+					</Field>
+				</ModalBody>
+				<ModalFooter>
+					<Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
+					<Button Color="Color.Success" Type="ButtonType.Submit">Create</Button>
+				</ModalFooter>
+			</EditForm>
+    </ModalContent>
+</Modal>
 
 @code {
+	private Modal _modalRef = new();
 	private Band _band { get; set; } = new();
+
+	[Parameter] public EventCallback OnChange { get; set; }
+
+	private string? _imagePreview;
+	private byte[]? _imageData;
+
+	private async Task HandleFileChange(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		using var stream = new MemoryStream();
+		await file.OpenReadStream(maxAllowedSize: 20_000_000).CopyToAsync(stream);
+
+		_imageData = stream.ToArray();
+		_imagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(_imageData)}";
+
+		_band.ImageData = _imageData;
+		_band.ImageMimeType = file.ContentType;
+	}
+
+	public void ShowModal()
+	{
+		_band = new();
+		_imagePreview = "";
+		_modalRef.Show();
+	}
+
+	private void HideModal()
+	{
+		_modalRef.Hide();
+	}
+
 	private async void HandleSubmit()
 	{
 		await RepositoryBand.AddAsync(_band);
 		await RepositoryBand.SaveChangesAsync();
+		await OnChange.InvokeAsync();
 
-		NavManager.NavigateTo("/");
+		await _modalRef.Hide();
+	}
+
+	public string GetDisplayName(Enum value)
+	{
+		var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+		var display = member?.GetCustomAttribute<DisplayAttribute>();
+		return display?.Name ?? value.ToString();
 	}
 }

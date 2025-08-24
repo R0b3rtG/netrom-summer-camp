@@ -5,6 +5,6 @@ namespace BlazorApp1.Repositories.Interfaces
     public interface IRepositoryFestival : IRepositoryBase<Festival>
     {
 		Task<IEnumerable<Festival>> GetAllFestivalWithBands();
-
-	}
+		Task<IEnumerable<Festival>> GetFestivalById(Guid id);
+    }
 }

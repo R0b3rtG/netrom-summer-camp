@@ -1,0 +1,113 @@
+﻿@rendermode InteractiveServer
+
+@inject IRepositoryBand RepositoryBand
+
+@using BlazorApp1.Repositories.Interfaces
+@using BlazorApp1.Entities
+@using BlazorApp1.Enums
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+<Modal @ref="_modalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Edit Band</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+		<EditForm Model="_band" OnValidSubmit="HandleSave">
+			<ModalBody>
+				<DataAnnotationsValidator />
+				<Field>
+					<FieldLabel>Name</FieldLabel>
+					<TextEdit @bind-text="_band.Name"></TextEdit>
+					<ValidationMessage For="() => _band.Name" class="text-danger" />
+				</Field>
+				<Field>
+					<Select TValue="Genre" @bind-SelectedValue="_band.Genre">
+						@foreach (Genre genre in Enum.GetValues(typeof(Genre)))
+						{
+							<SelectItem Value="@genre">@GetDisplayName(genre)</SelectItem>
+						}
+					</Select>
+				</Field>
+				<Field>
+						<InputFile OnChange="HandleFileChange" accept=".jpg,.jpeg,.png" />
+					<div style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center;">
+						@if (_imagePreview != null)
+						{
+							<img src="@_imagePreview" style="max-width: 200px;" />
+						}
+					</div>
+					<ValidationMessage For="() => _band.ImageData" class="text-danger" />
+				</Field>
+			</ModalBody>
+			<ModalFooter>
+				<Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
+				<Button Color="Color.Primary" Type="ButtonType.Submit">Save Changes</Button>
+			</ModalFooter>
+		</EditForm>
+    </ModalContent>
+</Modal>
+
+@code {
+	private Modal _modalRef = new();
+	private Band _band = new();
+	private Band _band_copy = new();
+
+	[Parameter] public EventCallback OnChange { get; set; }
+
+	private string? _imagePreview;
+	private byte[]? _imageData;
+
+	private async Task HandleFileChange(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		using var stream = new MemoryStream();
+		await file.OpenReadStream(maxAllowedSize: 20_000_000).CopyToAsync(stream);
+
+		_imageData = stream.ToArray();
+		_imagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(_imageData)}";
+
+		_band.ImageData = _imageData;
+		_band.ImageMimeType = file.ContentType;
+	}
+
+	public void ShowModal(Band band)
+	{
+		_band = band;
+		_band_copy.Name = band.Name;
+		_band_copy.Genre = band.Genre;
+		_band_copy.ImageData = band.ImageData;
+		_band_copy.ImageMimeType = band.ImageMimeType;
+		_imageData = band.ImageData?.ToArray();
+		_imagePreview = $"data:{band.ImageMimeType};base64,{Convert.ToBase64String(_imageData)}";
+
+		_modalRef.Show();
+	}
+
+	private void HideModal()
+	{
+		_band.Name = _band_copy.Name;
+		_band.Genre = _band_copy.Genre;
+		_band.ImageData = _band_copy.ImageData;
+		_band.ImageMimeType = _band_copy.ImageMimeType;
+
+		_modalRef.Hide();
+	}
+
+	private async Task HandleSave()
+	{
+		RepositoryBand.Update(_band);
+		await RepositoryBand.SaveChangesAsync();
+		await OnChange.InvokeAsync();
+
+		await _modalRef.Hide();
+	}
+
+	public string GetDisplayName(Enum value)
+	{
+		var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+		var display = member?.GetCustomAttribute<DisplayAttribute>();
+		return display?.Name ?? value.ToString();
+	}
+}

@@ -1,40 +1,61 @@
-﻿namespace BlazorApp1.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BlazorApp1.Enums
 {
     public enum Genre
     {
-        Rock,
-        HeavyMetal,
-        MetalCore,
-        BlackMetal,
-        DoomMetal,
-        DeathMetal,
-        NuMetal,
+        [Display(Name = "Alternative Metal")]
+        AlternativeMetal,
+		[Display(Name = "Alternative Rock")] 
         AlternativeRock,
-        IndieRock,
-        PunkRock,
-        PostRock,
-        Grunge,
-		Trap,
-		HipHop,
-		Rap,
-		EDM,
-        House,
-        Techno,
-        Dubstep,
-        Trance,
-        DrumAndBass,
-        Synthwave,
         Ambient,
-		Pop,
-        KPop,
-        RnB,
-        Soul,
-		Classical,
-        Jazz,
+        [Display(Name = "Black Metal")]
+        BlackMetal,
         Blues,
-        Folk,
-        Reggae,
+        Classical,
         Country,
+        [Display(Name = "Death Metal")]
+        DeathMetal,
+        [Display(Name = "Doom Metal")]
+        DoomMetal,
+        [Display(Name = "Drum And Bass")]
+        DrumAndBass,
+        Dubstep,
+        EDM,
+        Folk,
+        Grunge,
+        [Display(Name = "Heavy Metal")]
+        HeavyMetal,
+        [Display(Name = "Hip-Hop")]
+        HipHop,
+        House,
+        [Display(Name = "Indie Rock")]
+        IndieRock,
+        Jazz,
+        [Display(Name = "K-Pop")]
+        KPop,
         Manele,
-	}
+        [Display(Name = "Metal Core")]
+        MetalCore,
+        [Display(Name = "Nu Metal")]
+        NuMetal,
+		Pop,
+        [Display(Name = "Post Rock")]
+        PostRock,
+        [Display(Name = "Progressive Metal")]
+        ProgressiveMetal,
+        [Display(Name = "Progressive Rock")]
+        ProgressiveRock,
+        [Display(Name = "Punk Rock")]
+        PunkRock,
+        Rap,
+        Reggae,
+        RnB,
+        Rock,
+        Soul,
+        Synthwave,
+        Techno,
+        Trance,
+        Trap,
+		}
 }

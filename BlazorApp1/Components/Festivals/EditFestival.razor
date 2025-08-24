@@ -1,64 +1,123 @@
-﻿ @rendermode InteractiveServer
+﻿@rendermode InteractiveServer
 
- @inject IRepositoryFestival RepositoryFestival
+@inject IRepositoryFestival RepositoryFestival
 
- @using BlazorApp1.Entities
- @using BlazorApp1.Repositories.Interfaces
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
 
- <Modal @ref="_modalRef">
- 	<ModalContent Centered>
- 		<ModalHeader>
- 			<ModalTitle>Festival edit</ModalTitle>
- 			<CloseButton />
- 		</ModalHeader>
- 		<ModalBody>
- 			<Field>
- 				<FieldLabel>Name</FieldLabel>
- 				<TextEdit @bind-Text="_festival.Name" Placeholder="Enter Name..." />
- 			</Field>
- 			<Field>
- 				<FieldLabel>Location</FieldLabel>
- 				<TextEdit @bind-Text="_festival.Location" Placeholder="Enter Location..." />
- 			</Field>
- 			<Field style="position: relative;">
- 				<FieldLabel>Start Date</FieldLabel>
- 				<DatePicker @bind-Date="_festival.StartDate" TValue="DateTime?"></DatePicker>
- 			</Field>
- 			<Field style="position: relative;">
- 				<FieldLabel>End Date</FieldLabel>
- 				<DatePicker StaticPicker @bind-Date="_festival.EndDate" TValue="DateTime?"></DatePicker>
- 			</Field>
- 		</ModalBody>
- 		<ModalFooter>
- 			<Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
- 			<Button Color="Color.Primary" Clicked="HandleSave">Save Changes</Button>
- 		</ModalFooter>
- 	</ModalContent>
- </Modal>
+<Modal @ref="_modalRef">
+    <ModalContent Centered>
+ 	    <ModalHeader>
+ 		    <ModalTitle>Edit Fest</ModalTitle>
+ 		    <CloseButton />
+ 	    </ModalHeader>
+        <EditForm Model="_festival" OnValidSubmit="HandleSave">
+ 	        <ModalBody>
+                <DataAnnotationsValidator />
+                <Field style="margin-bottom: 2rem;">
+ 			        <FieldLabel>Name</FieldLabel>
+ 			        <TextEdit @bind-Text="_festival.Name" Placeholder="Enter Name..." />
+                    <ValidationMessage style="position: absolute;" For="() => _festival.Name" class="text-danger" />
+ 		        </Field>
+                <Field style="margin-bottom: 2rem;">
+ 			        <FieldLabel>Location</FieldLabel>
+ 			        <TextEdit @bind-Text="_festival.Location" Placeholder="Enter Location..." />
+                    <ValidationMessage style="position: absolute;" For="() => _festival.Location" class="text-danger" />
+ 		        </Field>
+                <Field style="margin-bottom: 2rem;">
+                    <FieldLabel>Price</FieldLabel>
+                    <InputNumber style="display: block; border: 1px solid #ddd; width: 100%; padding: .4rem; border-radius: 7px;" @bind-Value="_festival.Price"></InputNumber>
+                    <ValidationMessage style="position: absolute;" For="() => _festival.Price" class="text-danger" />
+                </Field>
+                <Field style="margin-bottom: 2rem; position: relative;">
+ 			        <FieldLabel>Start Date</FieldLabel>
+ 			        <DatePicker @bind-Date="_festival.StartDate" TValue="DateTime?"></DatePicker>
+                    <ValidationMessage style="position: absolute;" For="() => _festival.StartDate" class="text-danger" />
+ 		        </Field>
+                <Field style="margin-bottom: 2rem; position: relative;">
+ 			        <FieldLabel>End Date</FieldLabel>
+ 			        <DatePicker StaticPicker @bind-Date="_festival.EndDate" TValue="DateTime?"></DatePicker>
+                    <ValidationMessage style="position: absolute;" For="() => _festival.EndDate" class="text-danger" />
+ 		        </Field>
+                <Field style="margin-bottom: 2rem;">
+                    <InputFile OnChange="HandleFileChange" accept=".jpg,.jpeg,.png" />
+					<div style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center;">
+                        @if (_imagePreview != null)
+                        {
+                            <img src="@_imagePreview" style="max-width: 200px;" />
+                        }
+                    </div>
+                    <ValidationMessage style="position: absolute;" For="() => _festival.ImageData" class="text-danger" />
+                </Field>
+ 	        </ModalBody>
+ 	        <ModalFooter>
+ 		        <Button Color="Color.Secondary" Clicked="HideModal">Close</Button>
+                <Button Color="Color.Primary" Type="ButtonType.Submit">Save Changes</Button>
+ 	        </ModalFooter>
+        </EditForm>
+    </ModalContent>
+</Modal>
 
- @code {
- 	private Modal _modalRef = new();
- 	private Festival _festival = new();
+@code {
+    private Modal _modalRef = new();
+    private Festival _festival = new();
+    private Festival _festival_copy = new();
 
- 	[Parameter] public EventCallback OnChange { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
 
- 	public void ShowModal(Festival festival)
- 	{
- 		_festival = festival;
- 		_modalRef.Show();
- 	}
+    private string? _imagePreview;
+    private byte[]? _imageData;
 
- 	private void HideModal()
- 	{
- 		_modalRef.Hide();
- 	}
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = new MemoryStream();
+        await file.OpenReadStream(maxAllowedSize: 20_000_000).CopyToAsync(stream);
 
- 	private async Task HandleSave()
- 	{
- 		RepositoryFestival.Update(_festival);
- 		await RepositoryFestival.SaveChangesAsync();
- 		await OnChange.InvokeAsync();
+        _imageData = stream.ToArray();
+        _imagePreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(_imageData)}";
 
- 		await _modalRef.Hide();
- 	}
- }
+        _festival.ImageData = _imageData;
+        _festival.ImageMimeType = file.ContentType;
+    }
+
+    public void ShowModal(Festival festival)
+    {
+        _festival = festival;
+        _festival_copy.Id = festival.Id;
+        _festival_copy.Name = festival.Name;
+        _festival_copy.Location = festival.Location;
+        _festival_copy.Price = festival.Price;
+        _festival_copy.StartDate = festival.StartDate;
+        _festival_copy.EndDate = festival.EndDate;
+        _festival_copy.ImageData = festival.ImageData;
+        _festival_copy.ImageMimeType = festival.ImageMimeType;
+        _imageData = festival.ImageData?.ToArray();
+        _imagePreview = $"data:{festival.ImageMimeType};base64,{Convert.ToBase64String(_imageData)}";
+
+        _modalRef.Show();
+    }
+
+    private void HideModal()
+    {
+        _festival.Id = _festival_copy.Id;
+        _festival.Name = _festival_copy.Name;
+        _festival.Location = _festival_copy.Location;
+        _festival.Price = _festival_copy.Price;
+        _festival.StartDate = _festival_copy.StartDate;
+        _festival.EndDate = _festival_copy.EndDate;
+        _festival.ImageData = _festival_copy.ImageData;
+        _festival.ImageMimeType = _festival_copy.ImageMimeType;
+
+        _modalRef.Hide();
+    }
+
+    private async Task HandleSave()
+    {
+ 	    RepositoryFestival.Update(_festival);
+ 	    await RepositoryFestival.SaveChangesAsync();
+ 	    await OnChange.InvokeAsync();
+
+ 	    await _modalRef.Hide();
+    }
+}

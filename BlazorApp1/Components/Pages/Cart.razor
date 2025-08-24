@@ -1,0 +1,137 @@
+﻿@page "/cart"
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using BlazorApp1.Entities
+@using BlazorApp1.Repositories.Interfaces
+@using Blazorise.DataGrid
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IRepositoryBooking RepositoryBooking
+
+<PageTitle>Shopping Cart</PageTitle>
+
+<h3>Shopping Cart</h3>
+
+<div class="wrapper">
+	<table>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Booked On</th>
+				<th>Period</th>
+				<th>Price</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@if(_bookings?.Count != 0)
+			{	
+				@foreach(Booking booking in _bookings)
+				{	
+					<tr class="booking">
+						<td><a href="/festival/@booking.Festival.Id">@booking.Festival?.Name</a>&nbsp;&nbsp;x1</td>
+						<td>@booking.Date</td>
+						<td>@booking.Festival?.StartDate?.ToString("dd.MM.yyyy") - @booking.Festival?.EndDate?.ToString("dd.MM.yyyy")</td>
+						<td>@booking.Festival?.Price RON</td>
+						<td>
+							<button class="remove-btn" @onclick="() => RemoveBooking(booking)">Remove</button>
+						</td>
+					</tr>
+				}
+				<tr>
+					<td colspan="3" style="text-align: right;">Total:</td>
+					<td>@_total RON</td>
+					<td></td>
+				</tr>
+			} else
+			{
+				<tr>
+					<td colspan="5" class="nothing-found-message">
+						No booking in the shopping cart.
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<div class="checkout-summary">
+		<h3>Order Summary</h3>
+
+		<div class="summary-group">
+			@if (_bookings?.Count != 0)
+			{
+				<div class="summary-item">
+					<span>Subtotal</span>
+					<span>@_total RON</span>
+				</div>
+				<div class="summary-item">
+					<span>VAT</span>
+					<span>@((_total * 0.05)?.ToString("F2")) RON</span>
+				</div>
+				<div class="summary-item total">
+					<span>Total</span>
+					<span>@((_total * 1.05)?.ToString("F2")) RON</span>
+				</div>
+			} else
+			{
+				<p style="text-align: center;">No summary to display.</p>
+			}
+		</div>
+
+		<button @onclick="HandlePurchase" class="checkout-btn">Purchase</button>
+	</div>
+
+	<Alert style="position: absolute; bottom: 0; left: 20px;" Color="Color.Warning" @bind-Visible="@_warningAlertVisible">
+		<AlertMessage>
+			There are no bookings in the shopping cart.
+		</AlertMessage>
+	</Alert>
+</div>
+
+@code {
+	private List<Booking>? _bookings = new();
+	private string _username = string.Empty;
+	private float? _total;
+
+	private bool _warningAlertVisible = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_username = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity.Name;
+		_bookings = (await RepositoryBooking.GetUnpaidBookingsAsync(_username)).ToList();
+		_total = _bookings.Sum(booking => booking.Festival?.Price);
+	}
+
+	private async Task RemoveBooking(Booking booking)
+	{
+		_bookings = _bookings?.Where(bk => bk.Id != booking.Id).ToList();
+		RepositoryBooking.Delete(booking);
+		await RepositoryBooking.SaveChangesAsync();
+		_total = _bookings.Sum(booking => booking.Festival?.Price);
+	} 
+
+	private async Task HandlePurchase()
+	{
+		if(_bookings.Count > 0)
+		{
+			foreach(Booking booking in _bookings)
+			{
+				booking.Purchased = true;
+				RepositoryBooking.Update(booking);
+				await RepositoryBooking.SaveChangesAsync();
+			}
+			_bookings = new();
+			_total = 0;
+		} else
+		{
+			_warningAlertVisible = true;
+			StateHasChanged();
+			await Task.Delay(4000);
+			_warningAlertVisible = false;
+		}
+	}
+}

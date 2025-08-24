@@ -7,45 +7,145 @@
 @using BlazorApp1.Repositories.Interfaces
 @using Blazorise.DataGrid
 @using BlazorApp1.Enums
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Bands</PageTitle>
 
-<DataGrid 
-	TItem="Band"
-	Data="@_bands"
-	ShowPager="true"
-	PageSize="10"
-	Responsive="true"
-	Striped="true"
-	Bordered="true"
-	Hoverable="true"
->
-	<DataGridColumns>
-		<DataGridColumn Caption="Name" TItem="Band" Field="@nameof(Band.Name)"></DataGridColumn>
-		<DataGridColumn Caption="Genre" TItem="Band" Field="@nameof(Band.Genre)"></DataGridColumn>
-		<DataGridColumn TItem="Band" Caption="Actions">
-			<DisplayTemplate>
-				<Button Color="Color.Danger" Clicked="() => DeleteBand(context)">
-					Delete
-				</Button>
-			</DisplayTemplate>
-		</DataGridColumn>
-	</DataGridColumns>
-</DataGrid>
+<div class="search-section-flex">
+	<div>
+		<div class="small-filler-div"></div>
+		<AuthorizeView Roles="admin">
+			<Authorized>
+				<div class="filler-div" style="width: 104px;"></div>
+			</Authorized>
+		</AuthorizeView>
+	</div>
+
+	<div class="search-field-wrapper">
+		<Label>Search band</Label>
+		<TextEdit style="width: 400px;" Text="@_searchFilter" TextChanged="FilterBands"></TextEdit>
+	</div>
+	
+	<div>
+		<AuthorizeView Roles="admin">
+			<Authorized>
+				<div class="add-button-div">
+					<Button Color="Color.Primary" Clicked="ShowCreateModal">Add New Band</Button>
+				</div>
+			</Authorized>
+		</AuthorizeView>
+		<div class="small-filler-div"></div>
+	</div>
+</div>
+
+<div class="band-container">
+	@if (_filterResults != null)
+	{
+		@if(_filterResults.Count > 0)
+		{
+			@foreach (Band band in _filterResults)
+			{
+				<div class="band-card">
+					@if(band.ImageData != null)
+					{
+						<img class="band-img" src="data:@band.ImageMimeType;base64,@Convert.ToBase64String(band.ImageData.ToArray())" alt="Festival Image" />
+					} else {
+						<div class="band-img"></div>
+					}
+					<h2 class="band-title">@band.Name</h2>
+					<p class="band-genre">@GetDisplayName(band.Genre)</p>
+					<div class="band-actions d-flex flex-row gap-2">
+						<AuthorizeView Roles="admin">
+							<Authorized>
+								<button class="button" @onclick="() => ShowEditModal(band)">
+									Edit
+								</button>
+								<button class="button" @onclick="() => ShowDeleteModal(band)">
+									Delete
+								</button>
+							</Authorized>
+						</AuthorizeView>
+					</div>
+				</div>	
+			}
+		} else
+		{
+			<p style="text-align: center; width: 100%;">
+				No results. Try searching something else.
+			</p>
+		}
+	}
+</div>
+
+<EditBand @ref="_editComponent" OnChange="ReloadList"></EditBand>
+<CreateBand @ref="_createComponent" OnChange="ReloadList"></CreateBand>
+<DeleteBandModal @ref="_deleteComponent" OnChange="ReloadList"></DeleteBandModal>
 
 @code {
 	private List<Band>? _bands;
+	private Festival _festival = new();
+
+	private EditBand _editComponent = new();
+	private CreateBand _createComponent = new();
+	private DeleteBandModal _deleteComponent = new();
+
+	private string _searchFilter = string.Empty;
+	private List<Band> _filterResults = new();
+	private List<Band> _availableBands = new();
 
 	protected override async Task OnInitializedAsync()
 	{
-		_bands = (await RepositoryBand.GetAllAsync()).ToList();
+		_availableBands = (await RepositoryBand.GetAllAsync()).ToList();
+		_filterResults = Filter();
+
 	}
 
-	public async void DeleteBand(Band band)
+	private void ShowCreateModal()
 	{
-		RepositoryBand.Delete(band);
-		await RepositoryBand.SaveChangesAsync();
-		_bands = _bands?.Where(b => b.Id != band.Id).ToList();
+		_createComponent.ShowModal();
+	}
+
+	private void ShowEditModal(Band band)
+	{
+		_editComponent.ShowModal(band);
+	}
+
+	public async Task ShowDeleteModal(Band band)
+	{
+		await _deleteComponent.ShowModal(band);
+	}
+
+	private async Task ReloadList()
+	{
+		_availableBands = (await RepositoryBand.GetAllAsync()).ToList();
+		_filterResults = Filter();
+
+	}
+
+	public string GetDisplayName(Enum value)
+	{
+		var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+		var display = member?.GetCustomAttribute<DisplayAttribute>();
+		return display?.Name ?? value.ToString();
+	}
+
+	private void FilterBands(string newText)
+	{
+		_searchFilter = newText;
+		_filterResults = Filter();
 		StateHasChanged();
+	}
+
+	private List<Band> Filter()
+	{
+		return _availableBands
+			.Where(
+				band => band.Name.ToLower().Contains(_searchFilter.ToLower()) ||
+				GetDisplayName(band.Genre).ToLower().Contains(_searchFilter.ToLower())
+			)
+			.ToList();
 	}
 }

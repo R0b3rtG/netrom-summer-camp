@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorApp1.Migrations
 {
     [DbContext(typeof(ShowTimeContext))]
-    [Migration("20250707080515_AuthMigration")]
-    partial class AuthMigration
+    [Migration("20250709183327_FestivalAndBookingMigration")]
+    partial class FestivalAndBookingMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -100,6 +100,12 @@ namespace BlazorApp1.Migrations
                     b.Property<int>("Genre")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("ImageData")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ImageMimeType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -125,6 +131,12 @@ namespace BlazorApp1.Migrations
                     b.Property<Guid>("FestivalId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("Purchased")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RefundRequested")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FestivalId");
@@ -141,6 +153,12 @@ namespace BlazorApp1.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<byte[]>("ImageData")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ImageMimeType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -148,6 +166,9 @@ namespace BlazorApp1.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
