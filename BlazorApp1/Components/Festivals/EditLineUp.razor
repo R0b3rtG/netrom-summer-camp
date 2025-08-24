@@ -60,13 +60,13 @@
 	private void moveToLineup(Band band)
 	{
 		FestivalBand newFestivalBand = new FestivalBand
-			{
-				FestivalId = _festival.Id,
-				BandId = band.Id,
-				Band = band,
-				Festival = _festival,
-				Order = _festivalBands.Count + 1
-			};
+		{
+			FestivalId = _festival.Id,
+			BandId = band.Id,
+			Band = band,
+			Festival = _festival,
+			Order = _festivalBands.Count + 1
+		};
 
 		_festivalBands.Add(newFestivalBand);
 		_filterResults = Filter();
@@ -76,7 +76,7 @@
 	private void removeFromLineup(FestivalBand festivalBand)
 	{
 		_festivalBands = _festivalBands.Where(fb => festivalBand != fb).ToList();
-		for(int i = 0; i < _festivalBands.Count; i++)
+		for (int i = 0; i < _festivalBands.Count; i++)
 		{
 			_festivalBands[i].Order = i + 1;
 		}
